@@ -20,12 +20,18 @@ defmodule Cldr.Rfc5646.Parser do
   defp unwrap({:ok, acc, "", _, _, _}) when is_list(acc),
     do: {:ok, acc}
 
-  defp unwrap({:error, <<first::binary-size(1), reason::binary>>, rest, _, _, offset}),
-    do:
-      {:error,
-       {LanguageTag.ParseError,
-        "#{String.capitalize(first)}#{reason}. Could not parse the remaining #{inspect(rest)} " <>
-          "starting at position #{offset + 1}"}}
+  defp unwrap({:ok, _parsed, rest, _, _, offset}) do
+    {:error,
+     {LanguageTag.ParseError,
+      "Could not parse the remaining #{inspect(rest)} starting at position #{offset + 1}"}}
+  end
+
+  defp unwrap({:error, <<first::binary-size(1), reason::binary>>, rest, _, _, offset}) do
+    {:error,
+     {LanguageTag.ParseError,
+      "#{String.capitalize(first)}#{reason}. Could not parse the remaining #{inspect(rest)} " <>
+        "starting at position #{offset + 1}"}}
+  end
 
 
   # parsec:Cldr.Rfc5646.Parser
@@ -45,6 +51,9 @@ defmodule Cldr.Rfc5646.Parser do
             ])
             |> eos()
             |> label("a BCP47 language tag")
+
+  defparsec :extensions_and_private_use,
+            extensions_and_private_use()
 
   # parsec:Cldr.Rfc5646.Parser
 
